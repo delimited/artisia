@@ -14,6 +14,7 @@ base_packages:
   - vim
   - fwupd            # firmware updates from LVFS (Lenovo publishes there)
   - mokutil
+  - nvme-cli         # SSD health: sudo nvme smart-log /dev/nvme0
   - linux-headers-amd64
 
 # --- extrepo (external apt repos) ---

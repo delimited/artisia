@@ -41,3 +41,11 @@
   ansible.builtin.apt:
     name: "{{ base_packages }}"
     state: present
+
+# Weekly TRIM for the SSD (through LUKS via crypttab's "discard").
+# On by default for new installs; made explicit here.
+- name: Enable periodic TRIM
+  ansible.builtin.systemd_service:
+    name: fstrim.timer
+    enabled: true
+    state: started
