@@ -1,0 +1,43 @@
+---
+# Replace whatever the installer wrote with deb822 sources that include
+# contrib, non-free and non-free-firmware (needed for the NVIDIA driver).
+- name: Debian main archive (trixie, trixie-updates)
+  ansible.builtin.deb822_repository:
+    name: debian
+    types: [deb]
+    uris: [http://deb.debian.org/debian]
+    suites: [trixie, trixie-updates]
+    components: &components [main, contrib, non-free, non-free-firmware]
+    signed_by: /usr/share/keyrings/debian-archive-keyring.gpg
+  notify: Update apt cache
+
+- name: Debian security archive
+  ansible.builtin.deb822_repository:
+    name: debian-security
+    types: [deb]
+    uris: [http://security.debian.org/debian-security]
+    suites: [trixie-security]
+    components: *components
+    signed_by: /usr/share/keyrings/debian-archive-keyring.gpg
+  notify: Update apt cache
+
+- name: Retire the legacy one-line sources.list
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list
+    content: "# Managed by Ansible: sources live in /etc/apt/sources.list.d/*.sources\n"
+    mode: "0644"
+  notify: Update apt cache
+
+- name: Apply apt source changes now
+  ansible.builtin.meta: flush_handlers
+
+- name: Upgrade installed packages
+  ansible.builtin.apt:
+    upgrade: safe
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present

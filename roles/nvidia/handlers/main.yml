@@ -1,0 +1,4 @@
+---
+- name: Reboot reminder
+  ansible.builtin.debug:
+    msg: "NVIDIA driver installed or changed: reboot when the playbook finishes."

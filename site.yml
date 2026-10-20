@@ -1,0 +1,20 @@
+---
+- name: Configure artisia (ThinkPad P16 Gen 2, Debian 13)
+  hosts: workstations
+  become: true
+
+  pre_tasks:
+    - name: Check we are on Debian 13
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Debian"
+          - ansible_distribution_release == "trixie"
+        fail_msg: "This playbook targets Debian 13 (trixie)."
+
+  roles:
+    - { role: base, tags: [base] }
+    - { role: nvidia, tags: [nvidia] }
+    - { role: java, tags: [java] }
+    - { role: docker, tags: [docker] }
+    - { role: devtools, tags: [devtools] }
+    - { role: desktop, tags: [desktop] }

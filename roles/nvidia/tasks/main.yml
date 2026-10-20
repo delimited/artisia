@@ -1,0 +1,45 @@
+---
+# Proprietary driver from Debian non-free. With hybrid graphics this gives
+# PRIME render offload: Intel drives the desktop, and GNOME offers
+# "Launch using Discrete Graphics Card" on app right-click menus.
+- name: Install NVIDIA driver
+  ansible.builtin.apt:
+    name:
+      - nvidia-driver
+      - firmware-misc-nonfree
+      - nvidia-suspend-common   # keeps VRAM across suspend/resume
+    state: present
+  notify: Reboot reminder
+
+- name: Enable NVIDIA suspend/resume services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+  loop:
+    - nvidia-suspend.service
+    - nvidia-resume.service
+    - nvidia-hibernate.service
+
+- name: Check Secure Boot state
+  ansible.builtin.command: mokutil --sb-state
+  register: nvidia_sb_state
+  changed_when: false
+  failed_when: false
+
+- name: Check whether the DKMS signing key is already enrolled
+  ansible.builtin.command: mokutil --test-key /var/lib/dkms/mok.pub
+  register: nvidia_mok_test
+  changed_when: false
+  failed_when: false
+  when: "'SecureBoot enabled' in nvidia_sb_state.stdout"
+
+- name: Secure Boot needs a one-off manual step
+  ansible.builtin.debug:
+    msg: >-
+      Secure Boot is on and the DKMS key isn't enrolled yet. Run
+      'sudo mokutil --import /var/lib/dkms/mok.pub', choose a one-time password,
+      reboot, and pick "Enroll MOK" on the blue screen. The NVIDIA module will
+      load after that.
+  when:
+    - "'SecureBoot enabled' in nvidia_sb_state.stdout"
+    - "'is already enrolled' not in (nvidia_mok_test.stdout | default(''))"

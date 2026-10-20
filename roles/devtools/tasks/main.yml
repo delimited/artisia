@@ -1,0 +1,87 @@
+---
+- name: Microsoft VS Code apt repository
+  ansible.builtin.deb822_repository:
+    name: vscode
+    types: [deb]
+    uris: [https://packages.microsoft.com/repos/code]
+    suites: [stable]
+    components: [main]
+    architectures: [amd64]
+    signed_by: https://packages.microsoft.com/keys/microsoft.asc
+
+- name: Anthropic Claude Desktop apt repository
+  ansible.builtin.deb822_repository:
+    name: claude-desktop
+    types: [deb]
+    uris: [https://downloads.claude.ai/claude-desktop/apt/stable]
+    suites: [stable]
+    components: [main]
+    architectures: [amd64]
+    signed_by: https://downloads.claude.ai/claude-desktop/key.asc
+
+# The claude-desktop package drops a commented-out .list file of its own;
+# remove it so apt doesn't warn about a duplicate source.
+- name: Remove package-provided Claude Desktop .list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/claude-desktop.list
+    state: absent
+
+- name: Install developer tools
+  ansible.builtin.apt:
+    name: "{{ devtools_packages }}"
+    state: present
+    update_cache: true
+
+- name: Remove package-provided Claude Desktop .list (after install)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/claude-desktop.list
+    state: absent
+
+# --- Per-user installs (run as the desktop user, not root) ---
+
+- name: Install Claude Code CLI (native installer, self-updating)
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ desktop_home }}/.local/bin/claude"
+  become: true
+  become_user: "{{ desktop_user }}"
+  when: install_claude_code
+
+- name: JetBrains Toolbox
+  when: install_jetbrains_toolbox
+  become: true
+  become_user: "{{ desktop_user }}"
+  block:
+    - name: Check for an existing Toolbox download
+      ansible.builtin.stat:
+        path: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
+      register: devtools_toolbox_dir
+
+    - name: Fetch and unpack the latest Toolbox
+      when: not devtools_toolbox_dir.stat.exists
+      block:
+        - name: Look up the latest Toolbox release
+          ansible.builtin.uri:
+            url: https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release
+            return_content: true
+          register: devtools_toolbox_release
+
+        - name: Create Toolbox directory
+          ansible.builtin.file:
+            path: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
+            state: directory
+            mode: "0755"
+
+        - name: Download and unpack Toolbox
+          ansible.builtin.unarchive:
+            src: "{{ devtools_toolbox_release.json.TBA[0].downloads.linux.link }}"
+            dest: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
+            remote_src: true
+            extra_opts: [--strip-components=1]
+
+        - name: Toolbox next step
+          ansible.builtin.debug:
+            msg: >-
+              Run the jetbrains-toolbox binary in ~/.local/opt/jetbrains-toolbox once;
+              it installs itself, adds a GNOME launcher, and IntelliJ installs from there.

@@ -1,0 +1,57 @@
+---
+# The person whose machine this is. Taken from the account running ansible-playbook.
+desktop_user: "{{ lookup('env', 'USER') }}"
+desktop_home: "/home/{{ desktop_user }}"
+
+# --- base ---
+base_packages:
+  - build-essential
+  - curl
+  - wget
+  - git
+  - unzip
+  - htop
+  - vim
+  - fwupd            # firmware updates from LVFS (Lenovo publishes there)
+  - mokutil
+  - linux-headers-amd64
+
+# --- java ---
+# Debian 13 ships OpenJDK 25 in main, so no vendor repo is needed.
+java_major: 25
+java_packages:
+  - "openjdk-{{ java_major }}-jdk"
+  - maven
+
+# --- docker ---
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# --- devtools ---
+devtools_packages:
+  - code             # VS Code, Microsoft repo
+  - claude-desktop   # Anthropic repo
+install_claude_code: true
+install_jetbrains_toolbox: true
+
+# --- desktop ---
+desktop_packages:
+  - firefox          # Mozilla repo (current release, not ESR)
+  - thunderbird
+  - keepassxc
+  - fprintd
+  - libpam-fprintd
+  # Brother DCP-L2627DW: driverless printing (IPP Everywhere) and scanning (eSCL)
+  - cups
+  - ipp-usb
+  - sane-airscan
+  - simple-scan
+
+remove_firefox_esr: true
+
+flatpaks:
+  - com.spotify.Client

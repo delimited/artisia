@@ -1,0 +1,27 @@
+---
+- name: Install JDK and Maven
+  ansible.builtin.apt:
+    name: "{{ java_packages }}"
+    state: present
+
+# default-jdk on trixie is 21; make sure java/javac point at our chosen major.
+- name: Make the chosen Java the default
+  ansible.builtin.command: "update-java-alternatives --set java-1.{{ java_major }}.0-openjdk-amd64"
+  register: java_alt
+  changed_when: false
+  failed_when: false
+
+- name: Fall back to alternatives for java and javac
+  community.general.alternatives:
+    name: "{{ item }}"
+    path: "/usr/lib/jvm/java-{{ java_major }}-openjdk-amd64/bin/{{ item }}"
+  loop: [java, javac]
+  when: java_alt.rc != 0
+
+- name: Set JAVA_HOME for login shells
+  ansible.builtin.copy:
+    dest: /etc/profile.d/java-home.sh
+    content: |
+      # Managed by Ansible
+      export JAVA_HOME=/usr/lib/jvm/java-{{ java_major }}-openjdk-amd64
+    mode: "0644"

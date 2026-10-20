@@ -1,0 +1,63 @@
+---
+# --- Firefox from Mozilla (current release rather than Debian's ESR) ---
+- name: Mozilla apt repository
+  ansible.builtin.deb822_repository:
+    name: mozilla
+    types: [deb]
+    uris: [https://packages.mozilla.org/apt]
+    suites: [mozilla]
+    components: [main]
+    signed_by: https://packages.mozilla.org/apt/repo-signing-key.gpg
+
+- name: Prefer Mozilla's packages over Debian's for Firefox
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/mozilla
+    content: |
+      Package: *
+      Pin: origin packages.mozilla.org
+      Pin-Priority: 1000
+    mode: "0644"
+
+- name: Install desktop packages
+  ansible.builtin.apt:
+    name: "{{ desktop_packages }}"
+    state: present
+    update_cache: true
+
+- name: Remove Firefox ESR
+  ansible.builtin.apt:
+    name: firefox-esr
+    state: absent
+    purge: true
+  when: remove_firefox_esr
+
+# --- Fingerprint reader: allow it for login and sudo ---
+- name: Enable fingerprint authentication in PAM
+  ansible.builtin.command: pam-auth-update --enable fprintd
+  changed_when: false
+
+- name: Fingerprint enrolment reminder
+  ansible.builtin.debug:
+    msg: "Enrol a finger in Settings → Users → Fingerprint Login (or run 'fprintd-enroll')."
+
+# --- Flatpak + Flathub for non-developer desktop apps ---
+- name: Install Flatpak and GNOME Software integration
+  ansible.builtin.apt:
+    name:
+      - flatpak
+      - gnome-software-plugin-flatpak
+    state: present
+
+- name: Add Flathub
+  community.general.flatpak_remote:
+    name: flathub
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    method: system
+    state: present
+
+- name: Install Flatpak apps
+  community.general.flatpak:
+    name: "{{ flatpaks }}"
+    remote: flathub
+    method: system
+    state: present
