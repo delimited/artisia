@@ -59,5 +59,5 @@ Package lists live in `group_vars/all.yml`. That's usually the only file to edit
 | Claude Desktop | downloads.claude.ai |
 | Claude Code CLI | native installer (self-updating) |
 | Firefox | packages.mozilla.org (pinned over ESR) |
-| Spotify | Flathub |
+| Spotify, Foliate, Papers | Flathub |
 | IntelliJ | JetBrains Toolbox |

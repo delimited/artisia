@@ -61,3 +61,14 @@
     remote: flathub
     method: system
     state: present
+
+# Trixie's GNOME still defaults to Evince for PDFs.
+- name: Set default apps for document types
+  community.general.ini_file:
+    path: /etc/xdg/mimeapps.list
+    section: Default Applications
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    no_extra_spaces: true
+    mode: "0644"
+  loop: "{{ default_apps | dict2items }}"

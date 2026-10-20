@@ -55,3 +55,11 @@ remove_firefox_esr: true
 
 flatpaks:
   - com.spotify.Client
+  - com.github.johnfactotum.Foliate   # ePub reader
+  - org.gnome.Papers                  # PDF viewer (GNOME's successor to Evince)
+
+# System-wide default apps (/etc/xdg/mimeapps.list); per-user choices still win.
+# Flatpak names each launcher after its app ID.
+default_apps:
+  application/pdf: org.gnome.Papers.desktop
+  application/epub+zip: com.github.johnfactotum.Foliate.desktop
