@@ -1,13 +1,9 @@
 ---
 - name: Docker apt repository
-  ansible.builtin.deb822_repository:
-    name: docker
-    types: [deb]
-    uris: [https://download.docker.com/linux/debian]
-    suites: ["{{ ansible_distribution_release }}"]
-    components: [stable]
-    architectures: [amd64]
-    signed_by: https://download.docker.com/linux/debian/gpg
+  ansible.builtin.import_role:
+    name: extrepo
+  vars:
+    extrepo_repos: [docker-ce]
 
 - name: Install Docker Engine
   ansible.builtin.apt:

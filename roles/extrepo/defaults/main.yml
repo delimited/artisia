@@ -1,0 +1,3 @@
+---
+# Set by each role that imports this one: extrepo names to enable.
+extrepo_repos: []

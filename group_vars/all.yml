@@ -16,6 +16,12 @@ base_packages:
   - mokutil
   - linux-headers-amd64
 
+# --- extrepo (external apt repos) ---
+# VS Code and the Claude repos are proprietary, so need "non-free".
+extrepo_policies:
+  - main
+  - non-free
+
 # --- java ---
 # Debian 13 ships OpenJDK 25 in main, so no vendor repo is needed.
 java_major: 25
@@ -35,7 +41,7 @@ docker_packages:
 devtools_packages:
   - code             # VS Code, Microsoft repo
   - claude-desktop   # Anthropic repo
-install_claude_code: true
+  - claude-code      # Anthropic repo, stable channel; updates via apt
 install_jetbrains_toolbox: true
 
 # --- desktop ---

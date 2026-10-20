@@ -1,30 +1,14 @@
 ---
-- name: Microsoft VS Code apt repository
-  ansible.builtin.deb822_repository:
-    name: vscode
-    types: [deb]
-    uris: [https://packages.microsoft.com/repos/code]
-    suites: [stable]
-    components: [main]
-    architectures: [amd64]
-    signed_by: https://packages.microsoft.com/keys/microsoft.asc
-
-- name: Anthropic Claude Desktop apt repository
-  ansible.builtin.deb822_repository:
-    name: claude-desktop
-    types: [deb]
-    uris: [https://downloads.claude.ai/claude-desktop/apt/stable]
-    suites: [stable]
-    components: [main]
-    architectures: [amd64]
-    signed_by: https://downloads.claude.ai/claude-desktop/key.asc
-
-# The claude-desktop package drops a commented-out .list file of its own;
-# remove it so apt doesn't warn about a duplicate source.
-- name: Remove package-provided Claude Desktop .list
-  ansible.builtin.file:
-    path: /etc/apt/sources.list.d/claude-desktop.list
-    state: absent
+# The vscode and Claude Desktop entries also stop those packages adding
+# duplicate copies of their own repos.
+- name: VS Code and Claude apt repositories
+  ansible.builtin.import_role:
+    name: extrepo
+  vars:
+    extrepo_repos:
+      - vscode
+      - anthropic-claude-desktop
+      - anthropic-claude-code
 
 - name: Install developer tools
   ansible.builtin.apt:
@@ -32,21 +16,18 @@
     state: present
     update_cache: true
 
-- name: Remove package-provided Claude Desktop .list (after install)
+# /home survives reinstalls, and an old native-installer copy of Claude Code
+# in ~/.local/bin would shadow the apt one in /usr/bin. ~/.claude (settings,
+# history) is left alone.
+- name: Remove the native-installer Claude Code
   ansible.builtin.file:
-    path: /etc/apt/sources.list.d/claude-desktop.list
+    path: "{{ item }}"
     state: absent
+  loop:
+    - "{{ desktop_home }}/.local/bin/claude"
+    - "{{ desktop_home }}/.local/share/claude"
 
 # --- Per-user installs (run as the desktop user, not root) ---
-
-- name: Install Claude Code CLI (native installer, self-updating)
-  ansible.builtin.shell: set -o pipefail && curl -fsSL https://claude.ai/install.sh | bash
-  args:
-    executable: /bin/bash
-    creates: "{{ desktop_home }}/.local/bin/claude"
-  become: true
-  become_user: "{{ desktop_user }}"
-  when: install_claude_code
 
 - name: JetBrains Toolbox
   when: install_jetbrains_toolbox

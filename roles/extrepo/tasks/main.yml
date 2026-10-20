@@ -1,0 +1,35 @@
+---
+# External apt repos from Debian's curated extrepo list, which ships each
+# vendor's key pinned by checksum in a signed index. Other roles import this
+# with extrepo_repos set; see `extrepo search` for names.
+- name: Install extrepo
+  ansible.builtin.apt:
+    name: extrepo
+    state: present
+
+- name: Allow the license policies our repos need
+  ansible.builtin.lineinfile:
+    path: /etc/extrepo/config.yaml
+    regexp: '^#?\s*- {{ item }}$'
+    line: "- {{ item }}"
+    insertafter: '^enabled_policies:'
+  loop: "{{ extrepo_policies }}"
+
+# Re-enabling an existing repo doesn't refresh it; `extrepo update <name>`
+# does, e.g. after a vendor rotates its key.
+- name: Enable extrepo repositories
+  ansible.builtin.command: "extrepo enable {{ item }}"
+  args:
+    creates: "/etc/apt/sources.list.d/extrepo_{{ item }}.sources"
+  loop: "{{ extrepo_repos }}"
+
+# extrepo 0.14 (trixie) copies every architecture the vendor publishes into
+# the .sources file, so apt would fetch arm64/i386/... indexes too.
+# Fixed in 0.15, which isn't in trixie-backports.
+- name: Only fetch amd64 package indexes
+  ansible.builtin.lineinfile:
+    path: "/etc/apt/sources.list.d/extrepo_{{ item }}.sources"
+    regexp: '^Architectures:'
+    line: "Architectures: amd64"
+  loop: "{{ extrepo_repos }}"
+  ignore_errors: "{{ ansible_check_mode }}"  # file won't exist yet in a dry run

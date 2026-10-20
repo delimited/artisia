@@ -1,13 +1,10 @@
 ---
 # --- Firefox from Mozilla (current release rather than Debian's ESR) ---
 - name: Mozilla apt repository
-  ansible.builtin.deb822_repository:
-    name: mozilla
-    types: [deb]
-    uris: [https://packages.mozilla.org/apt]
-    suites: [mozilla]
-    components: [main]
-    signed_by: https://packages.mozilla.org/apt/repo-signing-key.gpg
+  ansible.builtin.import_role:
+    name: extrepo
+  vars:
+    extrepo_repos: [mozilla]
 
 - name: Prefer Mozilla's packages over Debian's for Firefox
   ansible.builtin.copy:
