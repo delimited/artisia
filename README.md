@@ -7,10 +7,54 @@ Idempotent: safe to rerun any time, and rerunning is how changes get applied.
 
 1. Download the **amd64 netinst** ISO from debian.org and check it against `SHA512SUMS` + `SHA512SUMS.sign`.
 2. Write it to USB (`dd` or GNOME Disks). Leave Secure Boot on.
-3. In the installer:
-   - *Guided – use entire disk with encrypted LVM*
-   - **Leave the root password blank** so your user gets sudo
-   - tasksel: **GNOME** + **standard system utilities** only
+3. Boot it, highlight *Graphical install*, press `e`, and add this to the end of the `linux` line
+   (before the ` ---`), then press Ctrl+X:
+
+   ```
+   url=https://raw.githubusercontent.com/CHANGEME/artisia/main/preseed/install.cfg
+   ```
+
+4. Answer the remaining questions. [`preseed/install.cfg`](preseed/install.cfg) handles two things:
+   - **Minimal GNOME**: `gnome-core` rather than tasksel's GNOME task, which brings LibreOffice,
+     Evolution, Shotwell and more. There's no software-selection screen.
+   - **Separate `/home`**: encrypted LVM with `root` (100 GB), `swap` (8 GB) and `home` (the rest)
+     as separate logical volumes. Edit the sizes in the preseed before installing if you want.
+     Docker and Flatpaks live on root.
+
+   It still asks you to pick the disk, set the encryption passphrase and confirm the writes.
+   **Leave the root password blank** so your user gets sudo. Use hostname `artisia`.
+
+### Reinstalling without losing `/home`
+
+The installer can't reuse an existing encrypted volume by itself, so a reinstall means unlocking
+it by hand and partitioning manually. **Back up `/home` first anyway.**
+
+1. Boot as above, but with `url=…/preseed/reinstall.cfg`.
+2. When *Partition disks* appears, press Ctrl+Alt+F2, press Enter, and unlock the volume:
+
+   ```
+   blkid | grep crypto_LUKS          # normally /dev/nvme0n1p3
+   cryptsetup luksOpen /dev/nvme0n1p3 nvme0n1p3_crypt
+   vgchange -ay
+   rm -f /var/lib/partman/filesystems_detected
+   ```
+
+3. Return to the installer with Ctrl+Alt+F5 (graphical) or Ctrl+Alt+F1 (text). Choose
+   *Go Back*, then *Partition disks* again, then *Manual*:
+
+   | Volume | Use as | Format? | Mount |
+   |---|---|---|---|
+   | EFI partition | EFI System Partition | yes | |
+   | 1 GB partition | ext4 | yes | `/boot` |
+   | `…-vg/root` | ext4 | **yes** | `/` |
+   | `…-vg/home` | ext4 | **no, keep existing data** | `/home` |
+   | `…-vg/swap` | swap area | | |
+
+   Check the summary before writing: `home` should show `K` (keep), not `F` (format).
+4. Create the **same username**. It gets uid 1000 again, so your files keep their owner.
+   The preseed writes `/etc/crypttab` and rebuilds the initramfs at the end, because the
+   installer doesn't do that for a volume it didn't create.
+5. Run the bootstrap again. It finds the existing clone in `~/src/artisia` and pulls it.
 
 ## 2. Bootstrap
 
