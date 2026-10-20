@@ -1,0 +1,9 @@
+# Managed by Ansible: system-wide GNOME defaults from gnome_settings.
+# Per-user settings override these.
+{% for path, keys in gnome_settings.items() %}
+
+[{{ path }}]
+{% for key, value in keys.items() %}
+{{ key }}={{ value }}
+{% endfor %}
+{% endfor %}

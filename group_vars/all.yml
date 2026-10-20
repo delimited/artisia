@@ -57,6 +57,11 @@ desktop_packages:
   - ipp-usb
   - sane-airscan
   - simple-scan
+  # GNOME extras
+  - gnome-shell-extension-appindicator   # tray icons (KeePassXC, Spotify, Claude)
+  - gnome-tweaks
+  - gnome-shell-extension-manager
+  - dconf-cli                            # applies gnome_settings below
 
 remove_firefox_esr: true
 
@@ -64,6 +69,23 @@ flatpaks:
   - com.spotify.Client
   - com.github.johnfactotum.Foliate   # ePub reader
   - org.gnome.Papers                  # PDF viewer (GNOME's successor to Evince)
+  - com.github.tchx84.Flatseal        # edit Flatpak permissions
+
+# System-wide GNOME defaults (/etc/dconf/db/local.d). Anything you change in
+# Settings still wins, and survives reinstalls along with /home.
+# Values use GVariant syntax, so strings need inner quotes.
+gnome_settings:
+  org/gnome/desktop/interface:
+    color-scheme: "'prefer-dark'"
+    gtk-theme: "'Adwaita-dark'"      # older GTK 3 apps ignore color-scheme
+    # 200% for the 4K panel. Mutter uses this for any display without a
+    # saved layout; Settings → Displays can still change it per display.
+    scaling-factor: "uint32 2"
+  org/gnome/desktop/wm/preferences:
+    button-layout: "'appmenu:minimize,maximize,close'"
+  org/gnome/shell:
+    # Debian ships AppIndicator under Ubuntu's UUID, not upstream's.
+    enabled-extensions: "['ubuntu-appindicators@ubuntu.com']"
 
 # System-wide default apps (/etc/xdg/mimeapps.list); per-user choices still win.
 # Flatpak names each launcher after its app ID.

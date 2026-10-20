@@ -1,4 +1,8 @@
 ---
+- name: Update initramfs
+  ansible.builtin.command: update-initramfs -u
+  changed_when: true
+
 - name: Reboot reminder
   ansible.builtin.debug:
     msg: "NVIDIA driver installed or changed: reboot when the playbook finishes."

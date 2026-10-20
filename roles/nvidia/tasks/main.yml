@@ -11,6 +11,22 @@
     state: present
   notify: Reboot reminder
 
+# GDM falls back to an X11 session on NVIDIA unless video memory is
+# preserved across suspend (see /usr/lib/udev/rules.d/61-gdm.rules). Save it
+# to /var/tmp because /tmp is RAM-backed on trixie. modeset=1 lets Wayland
+# drive any outputs wired to the NVIDIA GPU.
+- name: Configure the NVIDIA driver for Wayland
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/nvidia-wayland.conf
+    content: |
+      # Managed by Ansible
+      options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
+      options nvidia-drm modeset=1
+    mode: "0644"
+  notify:
+    - Update initramfs
+    - Reboot reminder
+
 - name: Enable NVIDIA suspend/resume services
   ansible.builtin.systemd_service:
     name: "{{ item }}"

@@ -72,6 +72,8 @@ Keep this repo **free of secrets** so it can stay public.
 - **Secure Boot + NVIDIA**: if the playbook says so, run `sudo mokutil --import /var/lib/dkms/mok.pub`,
   set a one-time password, reboot, choose *Enroll MOK*.
 - **Reboot**, then log out/in for the `docker` group to apply.
+  `echo $XDG_SESSION_TYPE` should print `wayland`. If it says `x11`, check that
+  `/proc/driver/nvidia/params` shows `PreserveVideoMemoryAllocations: 1`.
 - Enrol a fingerprint: *Settings → Users → Fingerprint Login*.
 - Run JetBrains Toolbox once from `~/.local/opt/jetbrains-toolbox`, then install IntelliJ.
 - Restore the KeePassXC database, then switch the remote to SSH:
@@ -92,6 +94,9 @@ ansible-playbook site.yml -K --check --diff  # dry run
 Roles: `base`, `nvidia`, `java`, `docker`, `devtools`, `desktop`
 (plus `extrepo`, which the others import to add their apt repos).
 Package lists live in `group_vars/all.yml`. That's usually the only file to edit.
+GNOME defaults (dark style, window buttons, enabled extensions) are in `gnome_settings` there.
+They're system-wide defaults, so anything you change in Settings wins.
+To find a setting's name, change it in Settings while running `dconf watch /`.
 
 ## What's where
 

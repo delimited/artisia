@@ -69,3 +69,26 @@
     no_extra_spaces: true
     mode: "0644"
   loop: "{{ default_apps | dict2items }}"
+
+# --- GNOME defaults via a system dconf database ---
+- name: Read user settings, then the system defaults
+  ansible.builtin.copy:
+    dest: /etc/dconf/profile/user
+    content: |
+      user-db:user
+      system-db:local
+    mode: "0644"
+  notify: Update dconf databases
+
+- name: Create the system dconf keyfile directory
+  ansible.builtin.file:
+    path: /etc/dconf/db/local.d
+    state: directory
+    mode: "0755"
+
+- name: GNOME default settings
+  ansible.builtin.template:
+    src: gnome-defaults.j2
+    dest: /etc/dconf/db/local.d/00-artisia
+    mode: "0644"
+  notify: Update dconf databases
