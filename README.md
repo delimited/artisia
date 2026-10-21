@@ -11,7 +11,7 @@ Idempotent: safe to rerun any time, and rerunning is how changes get applied.
    (before the ` ---`), then press Ctrl+X:
 
    ```
-   url=https://raw.githubusercontent.com/CHANGEME/artisia/main/preseed/install.cfg
+   url=https://raw.githubusercontent.com/delimited/artisia/main/preseed/install.cfg
    ```
 
 4. Answer the remaining questions. [`preseed/install.cfg`](preseed/install.cfg) handles two things:
@@ -60,7 +60,7 @@ it by hand and partitioning manually. **Back up `/home` first anyway.**
 
 ```bash
 sudo apt install -y curl
-curl -fsSL https://raw.githubusercontent.com/CHANGEME/artisia/main/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/delimited/artisia/main/bootstrap.sh | bash
 ```
 
 This installs Ansible, clones the repo to `~/src/artisia`, and runs the playbook.
@@ -77,7 +77,7 @@ Keep this repo **free of secrets** so it can stay public.
 - Enrol a fingerprint: *Settings → Users → Fingerprint Login*.
 - Run JetBrains Toolbox once from `~/.local/opt/jetbrains-toolbox`, then install IntelliJ.
 - Restore the KeePassXC database, then switch the remote to SSH:
-  `git -C ~/src/artisia remote set-url origin git@github.com:CHANGEME/artisia.git`
+  `git -C ~/src/artisia remote set-url origin git@github.com:delimited/artisia.git`
 - Sign in to Claude Desktop, Firefox Sync, Thunderbird, Spotify.
 - Add the Brother DCP-L2627DW in *Settings → Printers* (driverless; scanning works in Document Scanner).
 - PIA VPN (optional): Linux installer from privateinternetaccess.com.
