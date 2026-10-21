@@ -3,14 +3,14 @@
 #
 # Fresh machine:
 #   sudo apt install -y curl
-#   curl -fsSL https://raw.githubusercontent.com/CHANGEME/artisia/main/bootstrap.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/delimited/artisia/main/bootstrap.sh | bash
 #
 # Existing clone:
 #   ./bootstrap.sh                 # full run
 #   ./bootstrap.sh --tags java     # any extra args go to ansible-playbook
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/CHANGEME/artisia.git}"
+REPO_URL="${REPO_URL:-https://github.com/delimited/artisia.git}"
 REPO_DIR="${REPO_DIR:-$HOME/src/artisia}"
 
 if [[ $EUID -eq 0 ]]; then
