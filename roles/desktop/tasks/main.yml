@@ -28,6 +28,28 @@
     purge: true
   when: remove_firefox_esr
 
+# --- Nerd Font for the terminal (not packaged in Debian) ---
+- name: Download {{ nerd_font_name }} Nerd Font
+  ansible.builtin.get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ nerd_font_version }}/{{ nerd_font_name }}.tar.xz"
+    dest: "/var/cache/{{ nerd_font_name }}-nerd-font-{{ nerd_font_version }}.tar.xz"
+    checksum: "{{ nerd_font_checksum }}"
+    mode: "0644"
+
+- name: Create the Nerd Font directory
+  ansible.builtin.file:
+    path: "/usr/local/share/fonts/{{ nerd_font_name }}NerdFont"
+    state: directory
+    mode: "0755"
+
+- name: Unpack {{ nerd_font_name }} Nerd Font
+  ansible.builtin.unarchive:
+    src: "/var/cache/{{ nerd_font_name }}-nerd-font-{{ nerd_font_version }}.tar.xz"
+    dest: "/usr/local/share/fonts/{{ nerd_font_name }}NerdFont"
+    remote_src: true
+  ignore_errors: "{{ ansible_check_mode }}"
+  notify: Update font cache
+
 # --- Fingerprint reader: allow it for login and sudo ---
 - name: Enable fingerprint authentication in PAM
   ansible.builtin.command: pam-auth-update --enable fprintd

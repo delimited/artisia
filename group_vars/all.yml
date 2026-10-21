@@ -63,8 +63,17 @@ desktop_packages:
   - gnome-tweaks
   - gnome-shell-extension-manager
   - dconf-cli                            # applies gnome_settings below
+  # Fallback for symbols the Nerd Font lacks, e.g. Claude Code's ⎿ (U+23BF)
+  - fonts-symbola
 
 remove_firefox_esr: true
+
+# Debian's fonts-jetbrains-mono lacks the Nerd Font icons, so this comes from
+# the Nerd Fonts GitHub release. Bump both together (checksums are in the
+# release's SHA-256.txt).
+nerd_font_version: "3.5.1"
+nerd_font_name: JetBrainsMono
+nerd_font_checksum: "sha256:04d5e8f903693f9dd13e16f867e994834e681eb3c72c0d337a770dcda09010cf"
 
 flatpaks:
   - com.spotify.Client
@@ -94,6 +103,10 @@ gnome_settings:
     dock-fixed: "false"
     autohide: "true"
     intellihide: "false"
+  # GNOME Terminal's built-in default profile; its UUID is fixed.
+  "org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9":
+    use-system-font: "false"
+    font: "'JetBrainsMono Nerd Font 11'"
 
 # System-wide default apps (/etc/xdg/mimeapps.list); per-user choices still win.
 # Flatpak names each launcher after its app ID.
