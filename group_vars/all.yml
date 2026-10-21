@@ -59,6 +59,7 @@ desktop_packages:
   - simple-scan
   # GNOME extras
   - gnome-shell-extension-appindicator   # tray icons (KeePassXC, Spotify, Claude)
+  - gnome-shell-extension-dashtodock     # dock outside the overview
   - gnome-tweaks
   - gnome-shell-extension-manager
   - dconf-cli                            # applies gnome_settings below
@@ -85,7 +86,14 @@ gnome_settings:
     button-layout: "'appmenu:minimize,maximize,close'"
   org/gnome/shell:
     # Debian ships AppIndicator under Ubuntu's UUID, not upstream's.
-    enabled-extensions: "['ubuntu-appindicators@ubuntu.com']"
+    enabled-extensions: "['ubuntu-appindicators@ubuntu.com', 'dash-to-dock@micxgx.gmail.com']"
+  org/gnome/shell/extensions/dash-to-dock:
+    dock-position: "'LEFT'"
+    # Hidden until the pointer touches the left edge. intellihide would
+    # instead keep it visible whenever no window overlaps it.
+    dock-fixed: "false"
+    autohide: "true"
+    intellihide: "false"
 
 # System-wide default apps (/etc/xdg/mimeapps.list); per-user choices still win.
 # Flatpak names each launcher after its app ID.
