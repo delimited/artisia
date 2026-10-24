@@ -14,13 +14,15 @@
 # GDM falls back to an X11 session on NVIDIA unless video memory is
 # preserved across suspend (see /usr/lib/udev/rules.d/61-gdm.rules). Save it
 # to /var/tmp because /tmp is RAM-backed on trixie. modeset=1 lets Wayland
-# drive any outputs wired to the NVIDIA GPU.
+# drive any outputs wired to the NVIDIA GPU. The P16 Gen 2 firmware only
+# offers s2idle (no S3), and without S0ix support the driver keeps the GPU
+# and its VRAM powered for the whole suspend, draining the battery.
 - name: Configure the NVIDIA driver for Wayland
   ansible.builtin.copy:
     dest: /etc/modprobe.d/nvidia-wayland.conf
     content: |
       # Managed by Ansible
-      options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
+      options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp NVreg_EnableS0ixPowerManagement=1
       options nvidia-drm modeset=1
     mode: "0644"
   notify:
