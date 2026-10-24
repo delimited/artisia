@@ -29,18 +29,42 @@
 
 # --- Per-user installs (run as the desktop user, not root) ---
 
+# Toolbox 3 runs from wherever its tarball is unpacked, so the unpacked copy
+# is the install. It goes next to Toolbox's own data in ~/.local/share.
 - name: JetBrains Toolbox
   when: install_jetbrains_toolbox
   become: true
   become_user: "{{ desktop_user }}"
+  vars:
+    devtools_toolbox_home: "{{ desktop_home }}/.local/share/JetBrains/Toolbox"
+    devtools_toolbox_old: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
   block:
-    - name: Check for an existing Toolbox download
+    # Earlier runs unpacked into ~/.local/opt, and Toolbox's launcher and
+    # autostart entries point there. /home survives reinstalls, so clear them
+    # out; the launcher below and Toolbox's next start recreate them.
+    - name: Check for a Toolbox in the old location
       ansible.builtin.stat:
-        path: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
-      register: devtools_toolbox_dir
+        path: "{{ devtools_toolbox_old }}"
+      register: devtools_toolbox_old_dir
+
+    - name: Remove the old Toolbox and its desktop entries
+      when: devtools_toolbox_old_dir.stat.exists
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ devtools_toolbox_old }}"
+        - "{{ desktop_home }}/.local/share/applications/jetbrains-toolbox.desktop"
+        - "{{ desktop_home }}/.config/autostart/jetbrains-toolbox.desktop"
+
+    # The data directory exists before the binary does, so check the binary.
+    - name: Check for an existing Toolbox
+      ansible.builtin.stat:
+        path: "{{ devtools_toolbox_home }}/bin/jetbrains-toolbox"
+      register: devtools_toolbox_bin
 
     - name: Fetch and unpack the latest Toolbox
-      when: not devtools_toolbox_dir.stat.exists
+      when: not devtools_toolbox_bin.stat.exists
       block:
         - name: Look up the latest Toolbox release
           ansible.builtin.uri:
@@ -50,19 +74,36 @@
 
         - name: Create Toolbox directory
           ansible.builtin.file:
-            path: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
+            path: "{{ devtools_toolbox_home }}"
             state: directory
             mode: "0755"
 
+        # The tarball holds jetbrains-toolbox-<version>/bin/.
         - name: Download and unpack Toolbox
           ansible.builtin.unarchive:
             src: "{{ devtools_toolbox_release.json.TBA[0].downloads.linux.link }}"
-            dest: "{{ desktop_home }}/.local/opt/jetbrains-toolbox"
+            dest: "{{ devtools_toolbox_home }}"
             remote_src: true
             extra_opts: [--strip-components=1]
 
         - name: Toolbox next step
           ansible.builtin.debug:
             msg: >-
-              Run the jetbrains-toolbox binary in ~/.local/opt/jetbrains-toolbox once;
-              it installs itself, adds a GNOME launcher, and IntelliJ installs from there.
+              Open JetBrains Toolbox from the app grid and install IntelliJ from it.
+              Its first start also sets it to start at login.
+
+    # Nothing shows in the app grid until Toolbox first runs. It then rewrites
+    # this launcher with its own, hence force: false.
+    - name: Add a launcher for Toolbox
+      ansible.builtin.copy:
+        dest: "{{ desktop_home }}/.local/share/applications/jetbrains-toolbox.desktop"
+        content: |
+          [Desktop Entry]
+          Type=Application
+          Name=JetBrains Toolbox
+          Exec={{ devtools_toolbox_home }}/bin/jetbrains-toolbox
+          Icon={{ devtools_toolbox_home }}/bin/toolbox.svg
+          StartupNotify=false
+          Terminal=false
+        force: false
+        mode: "0644"

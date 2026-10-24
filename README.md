@@ -75,7 +75,7 @@ Keep this repo **free of secrets** so it can stay public.
   `echo $XDG_SESSION_TYPE` should print `wayland`. If it says `x11`, check that
   `/proc/driver/nvidia/params` shows `PreserveVideoMemoryAllocations: 1`.
 - Enrol a fingerprint: *Settings → Users → Fingerprint Login*. It unlocks the login and lock screens; sudo still asks for the password.
-- Run JetBrains Toolbox once from `~/.local/opt/jetbrains-toolbox`, then install IntelliJ.
+- Open JetBrains Toolbox from the app grid (it lives in `~/.local/share/JetBrains/Toolbox/bin`), then install IntelliJ from it.
 - Restore the KeePassXC database, then switch the remote to SSH:
   `git -C ~/src/artisia remote set-url origin git@github.com:delimited/artisia.git`
 - Sign in to Claude Desktop, Firefox Sync, Thunderbird, Spotify.
