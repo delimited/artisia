@@ -180,6 +180,19 @@
     method: system
     state: present
 
+# Spotify's CEF draws a plain Chromium titlebar on Wayland because mutter has
+# no server-side decorations for Wayland clients. Without the Wayland socket it
+# falls back to XWayland, where mutter draws a normal GNOME titlebar. This is
+# the file 'flatpak override --nosocket=wayland' writes.
+- name: Run Spotify under XWayland for GNOME window decorations
+  community.general.ini_file:
+    path: /var/lib/flatpak/overrides/com.spotify.Client
+    section: Context
+    option: sockets
+    value: "!wayland;"
+    no_extra_spaces: true
+    mode: "0644"
+
 # Trixie's GNOME still defaults to Evince for PDFs.
 - name: Set default apps for document types
   community.general.ini_file:
