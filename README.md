@@ -94,7 +94,7 @@ ansible-playbook site.yml -K --check --diff  # dry run
 Roles: `base`, `nvidia`, `java`, `docker`, `devtools`, `desktop`
 (plus `extrepo`, which the others import to add their apt repos).
 Package lists live in `group_vars/all.yml`. That's usually the only file to edit.
-GNOME defaults (dark style, window buttons, enabled extensions, terminal font) are in `gnome_settings` there.
+GNOME defaults (dark style, window buttons, enabled extensions, terminal fonts) are in `gnome_settings` there.
 They're system-wide defaults, so anything you change in Settings wins.
 To find a setting's name, change it in Settings while running `dconf watch /`.
 
@@ -105,7 +105,7 @@ list (extrepo name in brackets). If a vendor rotates its key, run `sudo extrepo 
 
 | Thing | Source |
 |---|---|
-| OpenJDK 25, Maven | Debian main |
+| OpenJDK 25, Maven, Ptyxis (default terminal) | Debian main |
 | NVIDIA driver | Debian non-free |
 | Docker CE | download.docker.com (`docker-ce`) |
 | VS Code | packages.microsoft.com (`vscode`) |
@@ -114,4 +114,4 @@ list (extrepo name in brackets). If a vendor rotates its key, run `sudo extrepo 
 | Firefox | packages.mozilla.org, pinned over ESR (`mozilla`) |
 | Spotify, Foliate, Papers | Flathub |
 | IntelliJ | JetBrains Toolbox |
-| JetBrainsMono Nerd Font (GNOME Terminal) | Nerd Fonts GitHub release, pinned by checksum |
+| JetBrainsMono Nerd Font (Ptyxis, GNOME Terminal) | Nerd Fonts GitHub release, pinned by checksum |

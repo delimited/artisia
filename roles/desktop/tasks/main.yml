@@ -92,6 +92,23 @@
     mode: "0644"
   loop: "{{ default_apps | dict2items }}"
 
+# xdg-terminal-exec reads /etc/xdg before its own GNOME list, which names
+# GNOME Terminal. gnome-core still pulls that in, so it stays installed.
+- name: Set the default terminal for xdg-terminal-exec
+  ansible.builtin.copy:
+    dest: /etc/xdg/xdg-terminals.list
+    content: |
+      {{ terminal_app }}
+    mode: "0644"
+
+# Ptyxis and GNOME Terminal register the same priority, so auto mode keeps
+# whichever was installed first.
+- name: Point x-terminal-emulator at Ptyxis
+  community.general.alternatives:
+    name: x-terminal-emulator
+    path: /usr/bin/ptyxis
+  ignore_errors: "{{ ansible_check_mode }}"
+
 # --- GNOME defaults via a system dconf database ---
 - name: Read user settings, then the system defaults
   ansible.builtin.copy:

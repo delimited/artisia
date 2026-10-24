@@ -65,6 +65,7 @@ desktop_packages:
   - dconf-cli                            # applies gnome_settings below
   # Fallback for symbols the Nerd Font lacks, e.g. Claude Code's ⎿ (U+23BF)
   - fonts-symbola
+  - ptyxis           # default terminal, see terminal_app below
 
 remove_firefox_esr: true
 
@@ -108,6 +109,13 @@ gnome_settings:
   "org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9":
     use-system-font: "false"
     font: "'JetBrainsMono Nerd Font 11'"
+  org/gnome/Ptyxis:
+    use-system-font: "false"
+    font-name: "'JetBrainsMono Nerd Font 11'"
+
+# Default terminal, by desktop file ID. GLib opens Terminal=true apps through
+# xdg-terminal-exec, which otherwise prefers GNOME Terminal under GNOME.
+terminal_app: org.gnome.Ptyxis.desktop
 
 # System-wide default apps (/etc/xdg/mimeapps.list); per-user choices still win.
 # Flatpak names each launcher after its app ID.
