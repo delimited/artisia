@@ -180,6 +180,53 @@
     method: system
     state: present
 
+# Flatpak apps can't use the host's NVIDIA libraries, only a Flathub GL
+# extension built for the exact driver version. 'flatpak update' adds it, but
+# this role only installs, so a driver update would leave Flatpaks without
+# the NVIDIA GPU.
+- name: Flatpak GL extension for the NVIDIA driver
+  vars:
+    desktop_nvidia_gl: >-
+      org.freedesktop.Platform.GL.nvidia-{{
+      desktop_nvidia_driver.stdout.split('-') | first | replace('.', '-') }}
+  block:
+    - name: Read the NVIDIA driver version
+      ansible.builtin.command: dpkg-query -W -f '${Version}' nvidia-driver
+      register: desktop_nvidia_driver
+      changed_when: false
+      ignore_errors: "{{ ansible_check_mode }}"  # not installed yet in a dry run
+
+    # Flathub can lag NVIDIA's repo by a few days after a driver release.
+    - name: Install the matching GL extension
+      community.general.flatpak:
+        name: "{{ desktop_nvidia_gl }}"
+        remote: flathub
+        method: system
+        state: present
+      register: desktop_nvidia_gl_install
+      failed_when: false
+
+    - name: GL extension not on Flathub yet
+      ansible.builtin.debug:
+        msg: >-
+          {{ desktop_nvidia_gl }} isn't on Flathub yet, so Flatpak apps can't use
+          the NVIDIA GPU. Rerun with '--tags desktop' in a few days.
+      when: desktop_nvidia_gl_install.rc | default(0) != 0
+
+    # The flatpak module only matches apps when removing, not runtimes.
+    - name: List installed Flatpak runtimes
+      ansible.builtin.command: flatpak list --system --runtime --columns=application
+      register: desktop_flatpak_runtimes
+      changed_when: false
+
+    - name: Remove GL extensions for older NVIDIA drivers
+      ansible.builtin.command: flatpak uninstall --system --noninteractive {{ item }}
+      loop: >-
+        {{ desktop_flatpak_runtimes.stdout_lines
+           | select('match', 'org\.freedesktop\.Platform\.GL\.nvidia-')
+           | reject('equalto', desktop_nvidia_gl) | unique }}
+      changed_when: true
+
 # Spotify's CEF draws a plain Chromium titlebar on Wayland because mutter has
 # no server-side decorations for Wayland clients. Without the Wayland socket it
 # falls back to XWayland, where mutter draws a normal GNOME titlebar. This is
