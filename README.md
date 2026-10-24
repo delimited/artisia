@@ -102,6 +102,7 @@ Docker starts on first use rather than at boot (`docker.socket`), so containers 
 
 Nothing checks for package updates in the background (the apt timers and GNOME Software's checks are off), so update by hand.
 Firmware metadata from LVFS still refreshes weekly, and a GNOME notification appears (Mondays, or at the next login) when it lists firmware updates.
+The NVIDIA driver is held to `nvidia_driver_branch`; another notification (also Mondays) says when NVIDIA moves its production branch on, once its Debian repo has the matching pinning package. Change the variable, rerun the playbook, then `sudo apt full-upgrade`.
 
 ```bash
 sudo apt update && sudo apt upgrade
@@ -117,7 +118,7 @@ list (extrepo name in brackets). If a vendor rotates its key, run `sudo extrepo 
 | Thing | Source |
 |---|---|
 | OpenJDK 25, Maven, Ptyxis (default terminal) | Debian main |
-| NVIDIA driver | Debian non-free |
+| NVIDIA driver (production branch, open kernel modules) | developer.download.nvidia.com (`nvidia-cuda`), pinned to `nvidia_driver_branch` |
 | Docker CE | download.docker.com (`docker-ce`) |
 | VS Code | packages.microsoft.com (`vscode`) |
 | Claude Desktop | downloads.claude.ai (`anthropic-claude-desktop`) |

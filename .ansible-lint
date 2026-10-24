@@ -1,3 +1,3 @@
 ---
 skip_list:
-  - command-instead-of-module  # pam-auth-update has no module
+  - command-instead-of-module  # pam-auth-update has no module; apt has no --reinstall

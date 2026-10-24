@@ -1,15 +1,71 @@
 ---
-# Proprietary driver from Debian non-free. With hybrid graphics this gives
-# PRIME render offload: Intel drives the desktop, and GNOME offers
+# NVIDIA's own Debian repo. extrepo calls it nvidia-cuda, but it carries the
+# full desktop driver; Debian's non-free one is stuck on the 550 branch.
+- name: NVIDIA apt repository
+  ansible.builtin.import_role:
+    name: extrepo
+  vars:
+    extrepo_repos:
+      - nvidia-cuda
+
+# The pin (an apt preferences file) has to exist before the driver installs,
+# or apt picks the newest branch rather than the production one.
+- name: Hold the NVIDIA driver at its production branch
+  ansible.builtin.apt:
+    name: "nvidia-driver-pinning-{{ nvidia_driver_branch }}"
+    state: present
+    update_cache: true
+
+# nvidia-open is the driver with NVIDIA's open kernel modules (recommended
+# from Turing on) plus the CUDA/NVENC runtime libraries, not the toolkit. It
+# replaces Debian's nvidia-* packages. Its nvidia-driver now ships the suspend
+# services, so nvidia-suspend-common conflicts with it. With hybrid graphics
+# this gives PRIME render offload: Intel drives the desktop, and GNOME offers
 # "Launch using Discrete Graphics Card" on app right-click menus.
 - name: Install NVIDIA driver
   ansible.builtin.apt:
     name:
-      - nvidia-driver
+      - nvidia-open
       - firmware-misc-nonfree
-      - nvidia-suspend-common   # keeps VRAM across suspend/resume
     state: present
   notify: Reboot reminder
+
+# Debian's driver routes its config and GL libraries through alternatives and
+# diversions (update-glx). NVIDIA's packages don't, but apt keeps these after
+# a switch, and their /etc/modprobe.d/nvidia.conf symlink stops dpkg putting
+# NVIDIA's real file there (it stays as nvidia.conf.dpkg-new).
+- name: Remove Debian's GLX alternatives and old driver configs
+  ansible.builtin.apt:
+    name:
+      - glx-alternative-nvidia
+      - glx-alternative-mesa
+      - glx-diversions
+      - update-glx
+      - nvidia-alternative
+      - nvidia-installer-cleanup
+      - nvidia-kernel-common
+      - nvidia-legacy-check
+      - nvidia-support
+      - nvidia-suspend-common
+    state: absent
+    purge: true
+
+- name: Check for NVIDIA's modprobe config
+  ansible.builtin.stat:
+    path: /etc/modprobe.d/nvidia.conf
+  register: nvidia_modprobe_conf
+
+# It blacklists nouveau, which otherwise claims the GPU at boot. dpkg only
+# reinstalls a missing conffile when told to.
+- name: Restore NVIDIA's modprobe config
+  ansible.builtin.command: >-
+    apt-get install --reinstall -y -o Dpkg::Options::=--force-confmiss
+    nvidia-kernel-support
+  when: not nvidia_modprobe_conf.stat.exists
+  changed_when: true
+  notify:
+    - Update initramfs
+    - Reboot reminder
 
 # GDM falls back to an X11 session on NVIDIA unless video memory is
 # preserved across suspend (see /usr/lib/udev/rules.d/61-gdm.rules). Save it
@@ -61,3 +117,66 @@
   when:
     - "'SecureBoot enabled' in nvidia_sb_state.stdout"
     - "'is already enrolled' not in (nvidia_mok_test.stdout | default(''))"
+
+# --- Weekly check for a new NVIDIA production branch ---
+# Same setup as the firmware update notification in the desktop role: a user
+# unit for the session bus, started by graphical-session.target. This role
+# runs before desktop, so it creates the directories too.
+- name: Weekly NVIDIA branch notification
+  become: true
+  become_user: "{{ desktop_user }}"
+  block:
+    - name: Create the user bin and systemd unit directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ desktop_home }}/.local/bin"
+        - "{{ desktop_home }}/.config/systemd/user/graphical-session.target.wants"
+
+    - name: Install the NVIDIA branch check
+      ansible.builtin.copy:
+        src: nvidia-branch-check
+        dest: "{{ desktop_home }}/.local/bin/nvidia-branch-check"
+        mode: "0755"
+
+    - name: Install the NVIDIA branch check user units
+      ansible.builtin.copy:
+        dest: "{{ desktop_home }}/.config/systemd/user/{{ item.name }}"
+        content: "{{ item.content }}"
+        mode: "0644"
+      loop:
+        - name: nvidia-branch-check.service
+          content: |
+            # Managed by Ansible
+            [Unit]
+            Description=Notify about a new NVIDIA production driver branch
+            After=graphical-session.target
+
+            [Service]
+            Type=oneshot
+            ExecStart=%h/.local/bin/nvidia-branch-check
+        - name: nvidia-branch-check.timer
+          content: |
+            # Managed by Ansible
+            [Unit]
+            Description=Weekly check for a new NVIDIA driver branch
+            PartOf=graphical-session.target
+
+            [Timer]
+            OnCalendar=Mon 12:00
+            Persistent=true
+
+            [Install]
+            WantedBy=graphical-session.target
+      loop_control:
+        label: "{{ item.name }}"
+
+    # 'systemctl --user enable' needs the user's D-Bus session, which isn't
+    # reachable from a sudo run. Takes effect at the next login.
+    - name: Enable the NVIDIA branch check timer
+      ansible.builtin.file:
+        src: ../nvidia-branch-check.timer
+        dest: "{{ desktop_home }}/.config/systemd/user/graphical-session.target.wants/nvidia-branch-check.timer"
+        state: link

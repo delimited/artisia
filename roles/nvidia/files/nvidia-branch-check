@@ -1,0 +1,33 @@
+#!/bin/sh
+# Managed by Ansible. Run weekly by nvidia-branch-check.timer (systemd user
+# unit): the nvidia role pins the driver to nvidia_driver_branch, so nothing
+# else says when NVIDIA's production branch moves on. latest.txt can get ahead
+# of the Debian repo, so stay quiet until the repo has the new branch's
+# pinning package. Network failures also stay quiet; the next run retries.
+set -eu
+
+sources=/etc/apt/sources.list.d/extrepo_nvidia-cuda.sources
+
+latest=$(curl -sf https://download.nvidia.com/XFree86/Linux-x86_64/latest.txt | cut -d' ' -f1)
+branch=${latest%%.*}
+
+# Branch pins only (nvidia-driver-pinning-595), not exact-version ones.
+pinned=$(dpkg-query -W -f '${db:Status-Status} ${Package}\n' 'nvidia-driver-pinning-*' 2>/dev/null |
+  sed -n 's/^installed nvidia-driver-pinning-\([0-9][0-9]*\)$/\1/p')
+
+# Guards -gt against an error page in place of latest.txt.
+case "$branch$pinned" in *[!0-9]*) exit 0 ;; esac
+[ -n "$branch" ] && [ -n "$pinned" ] && [ "$branch" -gt "$pinned" ] || exit 0
+
+repo=$(sed -n 's/^URIs: *//p' "$sources")
+curl -sf "${repo%/}/Packages.gz" | gunzip |
+  grep -qx "Package: nvidia-driver-pinning-$branch" || exit 0
+
+# gdbus instead of notify-send: it ships with GNOME, libnotify-bin doesn't.
+gdbus call --session --dest org.freedesktop.Notifications \
+  --object-path /org/freedesktop/Notifications \
+  --method org.freedesktop.Notifications.Notify \
+  "NVIDIA driver" 0 software-update-available "New NVIDIA driver branch" \
+  "NVIDIA's production branch is now $branch ($latest); this machine is pinned to $pinned.
+Set nvidia_driver_branch: \"$branch\" in group_vars/all.yml, rerun the playbook, then sudo apt full-upgrade." \
+  "[]" "{}" 0 >/dev/null

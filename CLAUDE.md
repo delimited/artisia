@@ -23,7 +23,7 @@ ansible-lint                                             # config in .ansible-li
 ## Architecture
 
 - **`group_vars/all.yml` is the main edit point**: package lists for each role, Flatpaks, `gnome_settings` (dconf keys in GVariant syntax, so strings need inner quotes, e.g. `"'prefer-dark'"`), and `default_apps`. `desktop_user` comes from `$USER` of whoever runs the playbook.
-- **Role order in `site.yml` matters**: `base` rewrites the apt sources (deb822, with contrib/non-free/non-free-firmware) and flushes handlers before anything else installs. `nvidia` depends on non-free being present.
+- **Role order in `site.yml` matters**: `base` rewrites the apt sources (deb822, with contrib/non-free/non-free-firmware) and flushes handlers before anything else installs. `nvidia` needs non-free-firmware (`firmware-misc-nonfree`); the driver itself comes from NVIDIA's repo via extrepo, held to a branch by `nvidia_driver_branch`.
 - **Third-party apt repos go through the `extrepo` role**, never hand-written `.sources` files or downloaded keys. A role adds repos with `import_role: name: extrepo` and `vars: extrepo_repos: [...]` (see `roles/docker`, `roles/devtools`, `roles/desktop`). The role also pins `.sources` files to `Architectures: amd64` to work around extrepo 0.14 in trixie. The licence policies it enables come from `extrepo_policies`.
 - **GNOME defaults are system-wide** (`/etc/dconf/db/local.d/00-artisia` from `roles/desktop/templates/gnome-defaults.j2`, plus `/etc/xdg/mimeapps.list`), so per-user settings in `/home` still win.
 - **Per-user installs** (JetBrains Toolbox) use `become_user: "{{ desktop_user }}"` inside a block. Everything else runs as root.

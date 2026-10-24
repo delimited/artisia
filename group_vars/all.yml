@@ -27,10 +27,15 @@ masked_units:
   - apt-daily-upgrade.timer    # unattended upgrades
 
 # --- extrepo (external apt repos) ---
-# VS Code and the Claude repos are proprietary, so need "non-free".
+# VS Code, the Claude repos and the NVIDIA driver are proprietary, so need "non-free".
 extrepo_policies:
   - main
   - non-free
+
+# --- nvidia ---
+# NVIDIA's production branch (what download.nvidia.com/XFree86/Linux-x86_64/latest.txt
+# points at). Moving to a new branch takes a playbook run plus 'apt full-upgrade'.
+nvidia_driver_branch: "595"
 
 # --- java ---
 # Debian 13 ships OpenJDK 25 in main, so no vendor repo is needed.
