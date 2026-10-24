@@ -80,6 +80,7 @@ flatpaks:
   - com.github.johnfactotum.Foliate   # ePub reader
   - org.gnome.Papers                  # PDF viewer (GNOME's successor to Evince)
   - com.github.tchx84.Flatseal        # edit Flatpak permissions
+  - org.videolan.VLC		      # video player with bundled codecs
 
 # System-wide GNOME defaults (/etc/dconf/db/local.d). Anything you change in
 # Settings still wins, and survives reinstalls along with /home.
