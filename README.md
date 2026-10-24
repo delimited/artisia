@@ -98,6 +98,14 @@ GNOME defaults (dark style, window buttons, enabled extensions, terminal fonts) 
 They're system-wide defaults, so anything you change in Settings wins.
 To find a setting's name, change it in Settings while running `dconf watch /`.
 
+Nothing checks for package updates in the background (the apt timers and GNOME Software's checks are off), so update by hand.
+
+```bash
+sudo apt update && sudo apt upgrade
+flatpak update
+fwupdmgr get-updates && fwupdmgr update
+```
+
 ## What's where
 
 Third-party apt repos come from Debian's [extrepo](https://salsa.debian.org/extrepo-team/extrepo-data)

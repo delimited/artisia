@@ -17,6 +17,14 @@ base_packages:
   - nvme-cli         # SSD health: sudo nvme smart-log /dev/nvme0
   - linux-headers-amd64
 
+# systemd units masked by the base role. Package updates are run by hand, so
+# nothing checks for them in the background (GNOME Software's checks are
+# switched off in gnome_settings below).
+masked_units:
+  - ModemManager.service       # no WWAN modem in this machine
+  - apt-daily.timer            # apt update + download
+  - apt-daily-upgrade.timer    # unattended upgrades
+
 # --- extrepo (external apt repos) ---
 # VS Code and the Claude repos are proprietary, so need "non-free".
 extrepo_policies:
@@ -112,6 +120,12 @@ gnome_settings:
   org/gnome/Ptyxis:
     use-system-font: "false"
     font-name: "'JetBrainsMono Nerd Font 11'"
+  # Turning off download-updates still leaves daily checks running.
+  # allow-updates is the only key that stops them; it also hides the
+  # Updates page (use apt, flatpak update and fwupdmgr instead).
+  org/gnome/software:
+    allow-updates: "false"
+    download-updates: "false"
 
 # Default terminal, by desktop file ID. GLib opens Terminal=true apps through
 # xdg-terminal-exec, which otherwise prefers GNOME Terminal under GNOME.

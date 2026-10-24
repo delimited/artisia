@@ -49,3 +49,12 @@
     name: fstrim.timer
     enabled: true
     state: started
+
+# Masked rather than disabled: ModemManager is D-Bus activatable and
+# NetworkManager would start it again on demand.
+- name: Mask unwanted background services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    masked: true
+    state: stopped
+  loop: "{{ masked_units }}"
