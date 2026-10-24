@@ -91,6 +91,13 @@ flatpaks:
   - com.github.tchx84.Flatseal        # edit Flatpak permissions
   - org.videolan.VLC		      # video player with bundled codecs
 
+# Permanent driverless (IPP Everywhere) print queues. The URI is the printer's
+# DNS-SD name, so it survives DHCP address changes; list candidates with
+# 'lpstat -l -e'.
+printers:
+  - name: Brother_DCP_L2627DWE
+    uri: ipps://Brother%20DCP-L2627DWE._ipps._tcp.local/
+
 # System-wide GNOME defaults (/etc/dconf/db/local.d). Anything you change in
 # Settings still wins, and survives reinstalls along with /home.
 # Values use GVariant syntax, so strings need inner quotes.

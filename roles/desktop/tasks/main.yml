@@ -59,6 +59,39 @@
   ansible.builtin.debug:
     msg: "Enrol a finger in Settings → Users → Fingerprint Login (or run 'fprintd-enroll')."
 
+# --- Printing: permanent driverless queues ---
+# cups-browsed would otherwise create the queues on the fly (implicitclass://)
+# and drop them when it stops. Mask it first, then add fixed queues under the
+# same names. GTK print dialogs still discover other LAN printers via CUPS.
+- name: Mask cups-browsed
+  ansible.builtin.systemd_service:
+    name: cups-browsed.service
+    masked: true
+    state: stopped
+
+- name: Read the existing printer queues
+  ansible.builtin.command: lpstat -v
+  register: desktop_lpstat
+  changed_when: false
+  failed_when: false   # exits non-zero when there are no queues
+
+# '-m everywhere' asks the printer for its capabilities, so this only works
+# while it's reachable. Don't fail the whole run when away from home.
+- name: Add printer queues
+  ansible.builtin.command: lpadmin -p {{ item.name }} -E -v {{ item.uri | quote }} -m everywhere
+  loop: "{{ printers }}"
+  when: "('device for ' ~ item.name ~ ': ' ~ item.uri) not in desktop_lpstat.stdout"
+  register: desktop_lpadmin
+  changed_when: desktop_lpadmin.rc == 0
+  failed_when: false
+
+- name: Printers that couldn't be added
+  ansible.builtin.debug:
+    msg: "Couldn't add {{ item.item.name }} ({{ item.stderr }}). Rerun with '--tags desktop' when it's on the network."
+  loop: "{{ desktop_lpadmin.results | selectattr('rc', 'defined') | rejectattr('rc', 'equalto', 0) }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
 # --- Flatpak + Flathub for non-developer desktop apps ---
 - name: Install Flatpak and GNOME Software integration
   ansible.builtin.apt:
