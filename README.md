@@ -98,6 +98,8 @@ GNOME defaults (dark style, window buttons, enabled extensions, terminal fonts) 
 They're system-wide defaults, so anything you change in Settings wins.
 To find a setting's name, change it in Settings while running `dconf watch /`.
 
+Docker starts on first use rather than at boot (`docker.socket`), so containers with a restart policy only come back after the first `docker` command.
+
 Nothing checks for package updates in the background (the apt timers and GNOME Software's checks are off), so update by hand.
 Firmware metadata from LVFS still refreshes weekly, and a GNOME notification appears (Mondays, or at the next login) when it lists firmware updates.
 

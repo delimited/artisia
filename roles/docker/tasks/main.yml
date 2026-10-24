@@ -11,11 +11,23 @@
     state: present
     update_cache: true
 
-- name: Start Docker on boot
+# Start Docker on first use instead of at boot: idle, containerd alone wakes
+# the CPU ~17 times a second. docker.service Requires= the socket and Wants=
+# containerd, so the first docker command brings up both. Containers with a
+# restart policy won't come back after a reboot until then.
+- name: Listen on the Docker socket
   ansible.builtin.systemd_service:
-    name: docker
+    name: docker.socket
     enabled: true
     state: started
+
+- name: Don't start Docker and containerd at boot
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: false
+  loop:
+    - docker.service
+    - containerd.service
 
 - name: Add the desktop user to the docker group
   ansible.builtin.user:
