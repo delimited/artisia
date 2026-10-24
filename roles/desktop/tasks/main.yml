@@ -50,11 +50,11 @@
   ignore_errors: "{{ ansible_check_mode }}"
   notify: Update font cache
 
-# --- Fingerprint reader: allow it for login and sudo ---
-- name: Enable fingerprint authentication in PAM
-  ansible.builtin.command: pam-auth-update --enable fprintd
-  changed_when: false
-
+# --- Fingerprint reader: login and lock screen only ---
+# GDM checks fingerprints through its own gdm-fingerprint PAM stack.
+# libpam-fprintd's common-auth profile is left off (its default): there,
+# sudo waits 10s for a finger before every password prompt, which stalls
+# each Ansible task.
 - name: Fingerprint enrolment reminder
   ansible.builtin.debug:
     msg: "Enrol a finger in Settings → Users → Fingerprint Login (or run 'fprintd-enroll')."

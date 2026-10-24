@@ -74,7 +74,7 @@ Keep this repo **free of secrets** so it can stay public.
 - **Reboot**, then log out/in for the `docker` group to apply.
   `echo $XDG_SESSION_TYPE` should print `wayland`. If it says `x11`, check that
   `/proc/driver/nvidia/params` shows `PreserveVideoMemoryAllocations: 1`.
-- Enrol a fingerprint: *Settings → Users → Fingerprint Login*.
+- Enrol a fingerprint: *Settings → Users → Fingerprint Login*. It unlocks the login and lock screens; sudo still asks for the password.
 - Run JetBrains Toolbox once from `~/.local/opt/jetbrains-toolbox`, then install IntelliJ.
 - Restore the KeePassXC database, then switch the remote to SSH:
   `git -C ~/src/artisia remote set-url origin git@github.com:delimited/artisia.git`
