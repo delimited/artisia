@@ -2,3 +2,9 @@
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: true
+
+- name: Restart fwupd-refresh timer
+  ansible.builtin.systemd_service:
+    name: fwupd-refresh.timer
+    state: restarted
+    daemon_reload: true

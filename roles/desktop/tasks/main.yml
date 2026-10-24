@@ -59,6 +59,72 @@
   ansible.builtin.debug:
     msg: "Enrol a finger in Settings → Users → Fingerprint Login (or run 'fprintd-enroll')."
 
+# --- Weekly firmware update notification ---
+# The base role refreshes LVFS metadata weekly; this tells the desktop user
+# when it lists updates. A user unit, because notifications need the session
+# bus. Started by graphical-session.target rather than timers.target so a
+# missed (Persistent) run waits until gnome-shell can show the notification.
+# Installed in the user's XDG locations, so it lives in /home.
+- name: Weekly firmware update notification
+  become: true
+  become_user: "{{ desktop_user }}"
+  block:
+    - name: Create the user bin and systemd unit directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ desktop_home }}/.local/bin"
+        - "{{ desktop_home }}/.config/systemd/user/graphical-session.target.wants"
+
+    - name: Install the firmware update check
+      ansible.builtin.copy:
+        src: firmware-update-check
+        dest: "{{ desktop_home }}/.local/bin/firmware-update-check"
+        mode: "0755"
+
+    - name: Install the firmware update check user units
+      ansible.builtin.copy:
+        dest: "{{ desktop_home }}/.config/systemd/user/{{ item.name }}"
+        content: "{{ item.content }}"
+        mode: "0644"
+      loop:
+        - name: firmware-update-check.service
+          content: |
+            # Managed by Ansible
+            [Unit]
+            Description=Notify about available firmware updates
+            After=graphical-session.target
+
+            [Service]
+            Type=oneshot
+            ExecStart=%h/.local/bin/firmware-update-check
+        - name: firmware-update-check.timer
+          content: |
+            # Managed by Ansible
+            [Unit]
+            Description=Weekly check for firmware updates
+            PartOf=graphical-session.target
+
+            [Timer]
+            OnCalendar=Mon 12:00
+            Persistent=true
+
+            [Install]
+            WantedBy=graphical-session.target
+      loop_control:
+        label: "{{ item.name }}"
+
+    # The symlink 'systemctl --user enable' would make; that needs the user's
+    # D-Bus session, which isn't reachable from a sudo run. Takes effect at
+    # the next login.
+    - name: Enable the firmware update check timer
+      ansible.builtin.file:
+        src: ../firmware-update-check.timer
+        dest: "{{ desktop_home }}/.config/systemd/user/graphical-session.target.wants/firmware-update-check.timer"
+        state: link
+
 # --- Printing: permanent driverless queues ---
 # cups-browsed would otherwise create the queues on the fly (implicitclass://)
 # and drop them when it stops. Mask it first, then add fixed queues under the

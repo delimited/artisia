@@ -1,0 +1,16 @@
+#!/bin/sh
+# Managed by Ansible. Run weekly by firmware-update-check.timer (systemd user
+# unit): GNOME Software's update checks are off, so nothing else would say
+# that fwupd has found firmware updates. --json also disables prompts.
+set -eu
+
+updates=$(fwupdmgr get-updates --json | jq -r '.Devices[]? | "\(.Name) → \(.Releases[0].Version)"')
+[ -n "$updates" ] || exit 0
+
+# gdbus instead of notify-send: it ships with GNOME, libnotify-bin doesn't.
+gdbus call --session --dest org.freedesktop.Notifications \
+  --object-path /org/freedesktop/Notifications \
+  --method org.freedesktop.Notifications.Notify \
+  "Firmware" 0 software-update-available "Firmware updates available" \
+  "$updates
+Install with: fwupdmgr update" "[]" "{}" 0 >/dev/null

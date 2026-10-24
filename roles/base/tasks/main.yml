@@ -58,3 +58,29 @@
     masked: true
     state: stopped
   loop: "{{ masked_units }}"
+
+# Firmware updates are rare and easy to forget, so unlike packages the LVFS
+# metadata keeps refreshing on its own: weekly instead of fwupd's hourly.
+- name: Create the fwupd-refresh timer drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/fwupd-refresh.timer.d
+    state: directory
+    mode: "0755"
+
+- name: Refresh firmware metadata weekly
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/fwupd-refresh.timer.d/weekly.conf
+    content: |
+      # Managed by Ansible
+      [Timer]
+      OnCalendar=
+      OnCalendar=weekly
+    mode: "0644"
+  notify: Restart fwupd-refresh timer
+
+- name: Enable the firmware metadata refresh
+  ansible.builtin.systemd_service:
+    name: fwupd-refresh.timer
+    masked: false
+    enabled: true
+    state: started

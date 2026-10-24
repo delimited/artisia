@@ -19,7 +19,8 @@ base_packages:
 
 # systemd units masked by the base role. Package updates are run by hand, so
 # nothing checks for them in the background (GNOME Software's checks are
-# switched off in gnome_settings below).
+# switched off in gnome_settings below). Firmware metadata still refreshes
+# weekly; see the base role.
 masked_units:
   - ModemManager.service       # no WWAN modem in this machine
   - apt-daily.timer            # apt update + download
@@ -74,6 +75,7 @@ desktop_packages:
   # Fallback for symbols the Nerd Font lacks, e.g. Claude Code's ⎿ (U+23BF)
   - fonts-symbola
   - ptyxis           # default terminal, see terminal_app below
+  - jq               # parses fwupdmgr's JSON in firmware-update-check
 
 remove_firefox_esr: true
 
