@@ -100,6 +100,8 @@ To find a setting's name, change it in Settings while running `dconf watch /`.
 
 Docker starts on first use rather than at boot (`docker.socket`), so containers with a restart policy only come back after the first `docker` command.
 
+Boot shows a Plymouth splash (the Lenovo logo and a spinner) with the GRUB menu hidden: hold Esc right after the logo appears to get the menu.
+
 Nothing checks for package updates in the background (the apt timers and GNOME Software's checks are off), so update by hand.
 Firmware metadata from LVFS still refreshes weekly, and a GNOME notification appears (Mondays, or at the next login) when it lists firmware updates.
 The NVIDIA driver is held to `nvidia_driver_branch`; another notification (also Mondays) says when NVIDIA moves its production branch on, once its Debian repo has the matching pinning package. Change the variable, rerun the playbook, then `sudo apt full-upgrade`.

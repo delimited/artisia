@@ -84,6 +84,10 @@ desktop_packages:
 
 remove_firefox_esr: true
 
+# Boot splash. bgrt keeps the firmware's Lenovo logo on screen with a spinner
+# underneath, like Fedora; list others with 'plymouth-set-default-theme -l'.
+plymouth_theme: bgrt
+
 # Debian's fonts-jetbrains-mono lacks the Nerd Font icons, so this comes from
 # the Nerd Fonts GitHub release. Bump both together (checksums are in the
 # release's SHA-256.txt).

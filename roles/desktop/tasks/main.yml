@@ -290,3 +290,37 @@
     dest: /etc/dconf/db/local.d/00-artisia
     mode: "0644"
   notify: Update dconf databases
+
+# --- Boot splash ---
+# Plymouth is already in the initramfs (with i915 for early KMS), but Debian
+# boots without 'splash', so the kernel and systemd messages show instead. It
+# also draws the LUKS passphrase prompt.
+- name: Install Plymouth themes
+  ansible.builtin.apt:
+    name: plymouth-themes
+    state: present
+
+- name: Set the Plymouth theme
+  community.general.ini_file:
+    path: /etc/plymouth/plymouthd.conf
+    section: Daemon
+    option: Theme
+    value: "{{ plymouth_theme }}"
+    no_extra_spaces: true
+    mode: "0644"
+  notify: Rebuild initramfs
+
+# A drop-in, because /etc/default/grub is a conffile. 'quiet' alone still
+# prints kernel errors (often harmless firmware/ACPI ones) before Plymouth
+# starts; loglevel=3 hides those too.
+- name: Boot quietly into the splash with the GRUB menu hidden
+  ansible.builtin.copy:
+    dest: /etc/default/grub.d/artisia.cfg
+    content: |
+      # Managed by Ansible
+      GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3"
+      # Hold Esc during the timeout to get the menu.
+      GRUB_TIMEOUT_STYLE=hidden
+      GRUB_TIMEOUT=1
+    mode: "0644"
+  notify: Update GRUB
