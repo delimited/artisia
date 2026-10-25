@@ -65,6 +65,10 @@ install_jetbrains_toolbox: true
 dotfiles_packages:
   - stow
   - gitleaks         # pre-commit secret scan in dotfiles and brain
+dotfiles_repo: https://github.com/delimited/dotfiles.git   # public, so HTTPS works before SSH keys exist
+dotfiles_dir: "{{ desktop_home }}/src/dotfiles"
+brain_repo: git@github.com:delimited/brain.git             # private: needs the KeePassXC SSH agent
+brain_dir: "{{ desktop_home }}/src/brain"
 
 # --- desktop ---
 desktop_packages:
