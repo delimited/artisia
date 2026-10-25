@@ -91,7 +91,7 @@ ansible-playbook site.yml -K --tags java     # one role
 ansible-playbook site.yml -K --check --diff  # dry run
 ```
 
-Roles: `base`, `nvidia`, `java`, `docker`, `devtools`, `desktop`
+Roles: `base`, `nvidia`, `java`, `docker`, `devtools`, `dotfiles`, `desktop`
 (plus `extrepo`, which the others import to add their apt repos).
 Package lists live in `group_vars/all.yml`. That's usually the only file to edit.
 GNOME defaults (dark style, window buttons, enabled extensions, terminal fonts) are in `gnome_settings` there.
@@ -119,12 +119,13 @@ list (extrepo name in brackets). If a vendor rotates its key, run `sudo extrepo 
 
 | Thing | Source |
 |---|---|
-| OpenJDK 25, Maven, Ptyxis (default terminal) | Debian main |
+| OpenJDK 25, Maven, Ptyxis (default terminal), ansible-lint, Stow, gitleaks | Debian main |
 | NVIDIA driver (production branch, open kernel modules) | developer.download.nvidia.com (`nvidia-cuda`), pinned to `nvidia_driver_branch` |
 | Docker CE | download.docker.com (`docker-ce`) |
 | VS Code | packages.microsoft.com (`vscode`) |
 | Claude Desktop | downloads.claude.ai (`anthropic-claude-desktop`) |
 | Claude Code CLI | downloads.claude.ai, stable channel (`anthropic-claude-code`) |
+| GitHub CLI (`gh`) | cli.github.com (`github-cli`) |
 | Firefox | packages.mozilla.org, pinned over ESR (`mozilla`) |
 | Spotify, Foliate, Papers | Flathub |
 | IntelliJ | JetBrains Toolbox |

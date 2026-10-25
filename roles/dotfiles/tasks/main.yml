@@ -1,0 +1,7 @@
+---
+# Tooling for ~/src/dotfiles and ~/src/brain: Stow links their packages into
+# $HOME, gitleaks backs their pre-commit secret scan.
+- name: Install dotfiles tooling
+  ansible.builtin.apt:
+    name: "{{ dotfiles_packages }}"
+    state: present

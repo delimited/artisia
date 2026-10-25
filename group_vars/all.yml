@@ -57,7 +57,14 @@ devtools_packages:
   - code             # VS Code, Microsoft repo
   - claude-desktop   # Anthropic repo
   - claude-code      # Anthropic repo, stable channel; updates via apt
+  - gh               # GitHub CLI, GitHub repo
+  - ansible-lint     # lints this playbook
 install_jetbrains_toolbox: true
+
+# --- dotfiles ---
+dotfiles_packages:
+  - stow
+  - gitleaks         # pre-commit secret scan in dotfiles and brain
 
 # --- desktop ---
 desktop_packages:
