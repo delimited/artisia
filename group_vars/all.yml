@@ -107,7 +107,7 @@ flatpaks:
   - com.github.johnfactotum.Foliate   # ePub reader
   - org.gnome.Papers                  # PDF viewer (GNOME's successor to Evince)
   - com.github.tchx84.Flatseal        # edit Flatpak permissions
-  - org.videolan.VLC		      # video player with bundled codecs
+  - org.videolan.VLC                  # video player with bundled codecs
 
 # Permanent driverless (IPP Everywhere) print queues. The URI is the printer's
 # DNS-SD name, so it survives DHCP address changes; list candidates with
