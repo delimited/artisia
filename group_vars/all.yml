@@ -57,7 +57,18 @@ devtools_packages:
   - code             # VS Code, Microsoft repo
   - claude-desktop   # Anthropic repo
   - claude-code      # Anthropic repo, stable channel; updates via apt
+  - gh               # GitHub CLI, GitHub repo
+  - ansible-lint     # lints this playbook
 install_jetbrains_toolbox: true
+
+# --- dotfiles ---
+dotfiles_packages:
+  - stow
+  - gitleaks         # pre-commit secret scan in dotfiles and brain
+dotfiles_repo: https://github.com/delimited/dotfiles.git   # public, so HTTPS works before SSH keys exist
+dotfiles_dir: "{{ desktop_home }}/src/dotfiles"
+brain_repo: git@github.com:delimited/brain.git             # private: needs the KeePassXC SSH agent
+brain_dir: "{{ desktop_home }}/src/brain"
 
 # --- desktop ---
 desktop_packages:
@@ -100,7 +111,7 @@ flatpaks:
   - com.github.johnfactotum.Foliate   # ePub reader
   - org.gnome.Papers                  # PDF viewer (GNOME's successor to Evince)
   - com.github.tchx84.Flatseal        # edit Flatpak permissions
-  - org.videolan.VLC		      # video player with bundled codecs
+  - org.videolan.VLC                  # video player with bundled codecs
 
 # Permanent driverless (IPP Everywhere) print queues. The URI is the printer's
 # DNS-SD name, so it survives DHCP address changes; list candidates with

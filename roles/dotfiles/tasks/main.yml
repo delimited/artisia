@@ -1,0 +1,62 @@
+---
+# Tooling for ~/src/dotfiles and ~/src/brain: Stow links their packages into
+# $HOME, gitleaks backs their pre-commit secret scan.
+- name: Install dotfiles tooling
+  ansible.builtin.apt:
+    name: "{{ dotfiles_packages }}"
+    state: present
+
+# This role clones the two repos and runs their install.sh; their contents
+# are theirs. become: false rather than become_user: the playbook already runs
+# as the desktop user, and sudo -u would drop SSH_AUTH_SOCK, which the private
+# brain clone needs (the key lives in KeePassXC's SSH agent).
+- name: Dotfiles and brain repos
+  become: false
+  block:
+    # update: false, so a rerun never resets local edits; pull by hand.
+    - name: Clone the dotfiles repo
+      ansible.builtin.git:
+        repo: "{{ dotfiles_repo }}"
+        dest: "{{ dotfiles_dir }}"
+        version: main
+        update: false
+
+    - name: Link the dotfiles into $HOME
+      ansible.builtin.command: "{{ dotfiles_dir }}/install.sh"
+      register: dotfiles_install
+      changed_when: dotfiles_install.stdout is search('^(LINK|UNLINK|MOVED|CHANGED):', multiline=True)
+      ignore_errors: "{{ ansible_check_mode }}"  # no clone in a dry run
+
+    # GitHub exits 1 even when authentication works, so test the message.
+    # Fails until KeePassXC is restored with its SSH agent enabled.
+    - name: Check for a GitHub SSH key
+      ansible.builtin.command: ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -T git@github.com
+      register: dotfiles_github_ssh
+      failed_when: false
+      changed_when: false
+      check_mode: false
+
+    - name: Clone and link the brain repo
+      when: dotfiles_github_ssh.stderr is search('successfully authenticated')
+      block:
+        - name: Clone the brain repo
+          ansible.builtin.git:
+            repo: "{{ brain_repo }}"
+            dest: "{{ brain_dir }}"
+            version: main
+            update: false
+            accept_newhostkey: true
+
+        - name: Link the brain's Claude Code config into ~/.claude
+          ansible.builtin.command: "{{ brain_dir }}/install.sh"
+          register: dotfiles_brain_install
+          changed_when: dotfiles_brain_install.stdout is search('^(LINK|UNLINK|MOVED|CHANGED):', multiline=True)
+          ignore_errors: "{{ ansible_check_mode }}"  # no clone in a dry run
+
+    - name: Brain skipped
+      when: dotfiles_github_ssh.stderr is not search('successfully authenticated')
+      ansible.builtin.debug:
+        msg: >-
+          Skipped the private brain repo: no GitHub SSH key available. Restore
+          the KeePassXC database, enable its SSH agent, then rerun
+          'ansible-playbook site.yml -K --tags dotfiles'.

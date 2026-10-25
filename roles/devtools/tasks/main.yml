@@ -1,7 +1,8 @@
 ---
 # The vscode and Claude Desktop entries also stop those packages adding
-# duplicate copies of their own repos.
-- name: VS Code and Claude apt repositories
+# duplicate copies of their own repos. GitHub's own repo, because Debian's gh
+# lags upstream by many releases.
+- name: VS Code, Claude and GitHub CLI apt repositories
   ansible.builtin.import_role:
     name: extrepo
   vars:
@@ -9,6 +10,7 @@
       - vscode
       - anthropic-claude-desktop
       - anthropic-claude-code
+      - github-cli
 
 - name: Install developer tools
   ansible.builtin.apt:

@@ -29,7 +29,7 @@
   when: remove_firefox_esr
 
 # --- Nerd Font for the terminal (not packaged in Debian) ---
-- name: Download {{ nerd_font_name }} Nerd Font
+- name: Download the Nerd Font, {{ nerd_font_name }}
   ansible.builtin.get_url:
     url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ nerd_font_version }}/{{ nerd_font_name }}.tar.xz"
     dest: "/var/cache/{{ nerd_font_name }}-nerd-font-{{ nerd_font_version }}.tar.xz"
@@ -42,7 +42,7 @@
     state: directory
     mode: "0755"
 
-- name: Unpack {{ nerd_font_name }} Nerd Font
+- name: Unpack the Nerd Font, {{ nerd_font_name }}
   ansible.builtin.unarchive:
     src: "/var/cache/{{ nerd_font_name }}-nerd-font-{{ nerd_font_version }}.tar.xz"
     dest: "/usr/local/share/fonts/{{ nerd_font_name }}NerdFont"

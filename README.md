@@ -78,6 +78,13 @@ Keep this repo **free of secrets** so it can stay public.
 - Open JetBrains Toolbox from the app grid (it lives in `~/.local/share/JetBrains/Toolbox/bin`), then install IntelliJ from it.
 - Restore the KeePassXC database, then switch the remote to SSH:
   `git -C ~/src/artisia remote set-url origin git@github.com:delimited/artisia.git`
+- With the KeePassXC SSH agent enabled, rerun `ansible-playbook site.yml -K --tags dotfiles`
+  to clone the private `~/src/brain` and link its Claude Code config. Then:
+  - create `~/.config/git/local` with your `[user]` name, email and signing settings
+    (the public dotfiles repo includes it but can't hold it);
+  - switch the dotfiles remote to SSH:
+    `git -C ~/src/dotfiles remote set-url origin git@github.com:delimited/dotfiles.git`;
+  - run `cr` once and log in (the clean-room Claude Code session keeps its own login).
 - Sign in to Claude Desktop, Firefox Sync, Thunderbird, Spotify.
 - Add the Brother DCP-L2627DW in *Settings → Printers* (driverless; scanning works in Document Scanner).
 - PIA VPN (optional): Linux installer from privateinternetaccess.com.
@@ -91,7 +98,7 @@ ansible-playbook site.yml -K --tags java     # one role
 ansible-playbook site.yml -K --check --diff  # dry run
 ```
 
-Roles: `base`, `nvidia`, `java`, `docker`, `devtools`, `desktop`
+Roles: `base`, `nvidia`, `java`, `docker`, `devtools`, `dotfiles`, `desktop`
 (plus `extrepo`, which the others import to add their apt repos).
 Package lists live in `group_vars/all.yml`. That's usually the only file to edit.
 GNOME defaults (dark style, window buttons, enabled extensions, terminal fonts) are in `gnome_settings` there.
@@ -119,13 +126,16 @@ list (extrepo name in brackets). If a vendor rotates its key, run `sudo extrepo 
 
 | Thing | Source |
 |---|---|
-| OpenJDK 25, Maven, Ptyxis (default terminal) | Debian main |
+| OpenJDK 25, Maven, Ptyxis (default terminal), ansible-lint, Stow, gitleaks | Debian main |
 | NVIDIA driver (production branch, open kernel modules) | developer.download.nvidia.com (`nvidia-cuda`), pinned to `nvidia_driver_branch` |
 | Docker CE | download.docker.com (`docker-ce`) |
 | VS Code | packages.microsoft.com (`vscode`) |
 | Claude Desktop | downloads.claude.ai (`anthropic-claude-desktop`) |
 | Claude Code CLI | downloads.claude.ai, stable channel (`anthropic-claude-code`) |
+| GitHub CLI (`gh`) | cli.github.com (`github-cli`) |
 | Firefox | packages.mozilla.org, pinned over ESR (`mozilla`) |
 | Spotify, Foliate, Papers | Flathub |
 | IntelliJ | JetBrains Toolbox |
+| Shell, git and Claude Code config | [delimited/dotfiles](https://github.com/delimited/dotfiles) in `~/src/dotfiles`, linked with Stow |
+| Knowledge base, Claude Code router and skills | delimited/brain (private) in `~/src/brain`, linked with Stow |
 | JetBrainsMono Nerd Font (Ptyxis, GNOME Terminal) | Nerd Fonts GitHub release, pinned by checksum |

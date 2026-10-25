@@ -17,4 +17,5 @@
     - { role: java, tags: [java] }
     - { role: docker, tags: [docker] }
     - { role: devtools, tags: [devtools] }
+    - { role: dotfiles, tags: [dotfiles] }
     - { role: desktop, tags: [desktop] }
